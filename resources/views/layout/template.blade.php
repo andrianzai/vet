@@ -3,13 +3,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title')</title>
-    @include('layout.header')
+    @include('partial.header')
 </head>
 <body>
     <div class="container-scroller">
-        @include('layout.navbar')
+        @include('partial.navbar')
         <div class="container-fluid page-body-wrapper">
-            @include('layout.sidebar')
+            @include('partial.sidebar')
             <div class="main-panel">
                 <div class="content-wrapper">
                     <div class="row">
@@ -26,6 +26,6 @@
         </div>
     </div>
 
-    @include('layout.footer')
+    @include('partial.footer')
 </body>
 </html>
