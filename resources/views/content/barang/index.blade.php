@@ -99,16 +99,17 @@
 
         // Edit inline
         $('.editable').on('blur', function() {
-            var kode_barang = $(this).closest('tr').data('id');
+            var kode_barang = $(this).data('id');
             var column = $(this).data('column');
             var value = $(this).text();
 
             $.ajax({
-                type: "PUT",
+                method: "PUT",
                 url: "/barang/" + kode_barang,
                 data: {
-                    "_token": "{{ csrf_token() }}",
-                    [column]: value
+                    column: column,
+                    value: value,
+                    "_token": $('meta[name="csrf-token"]').attr('content'),
                 },
                 success: function(response) {
                     alert('Data berhasil diperbarui');
