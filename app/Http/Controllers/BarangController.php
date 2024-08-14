@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Barang;
 use Illuminate\Support\Facades\Log;
 
+
 class BarangController extends Controller
 {
     public function index()
@@ -30,19 +31,34 @@ class BarangController extends Controller
 
     public function update(Request $request, $kode_barang)
     {
-        Log::info($request->all);
-        // $request->validate([
-        //     'nama_barang' => 'required|string',
-        //     'stok_barang' => 'required|integer',
-        //     'harga_barang' => 'required|numeric',
-        //     'keterangan' => 'nullable|string',
-        // ]);
-        
-        $barang = Barang::findOrFail($kode_barang);
-        $barang->update([
-            $request->input('column') => $request->input('value'),
-        ]);
-        return response()->json(['success' => 'Barang berhasil diupdate']);
+        try {
+            // Validasi input
+            $validated = $request->validate([
+                'field_name' => 'required|string',
+                'value' => 'required'
+            ]);
+    
+            // Cari barang berdasarkan kode_barang
+            $barang = Barang::findOrFail($kode_barang);
+    
+            // Update hanya field yang diterima
+            $field_name = $validated['field_name'];
+            $value = $validated['value'];
+    
+            // Pastikan bahwa field_name yang dikirim adalah salah satu dari field yang diperbolehkan
+            if (in_array($field_name, ['nama_barang', 'stok_barang', 'harga_barang', 'keterangan'])) {
+                // Update field dengan nilai baru
+                $barang->$field_name = $value;
+                $barang->save();
+            } else {
+                return response()->json(['error' => 'Field tidak valid'], 422);
+            }
+    
+            return response()->json(['success' => 'Data barang berhasil diupdate']);
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json(['error' => 'Terjadi kesalahan saat mengupdate data.'], 500);
+        }
     }
 
     public function destroy($kode_barang)

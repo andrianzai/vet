@@ -8,7 +8,7 @@
       </li>
       <li class="nav-item nav-category">Transaksi</li>
       <li class="nav-item">
-        <a class="nav-link" href="{{ url('/transaksi') }}">
+        <a class="nav-link" href="{{ url('/penjualan') }}">
           <i class="menu-icon fa fa-credit-card"></i>
           <span class="menu-title">Transaksi</span>
         </a>

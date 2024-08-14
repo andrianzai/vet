@@ -21,5 +21,11 @@ class Barang extends Model
         'keterangan'
     ];
 
+    public function kurangiStok($jumlah)
+    {
+        $this->stok_barang -= $jumlah;
+        $this->save();
+    }
+
     public $timestamps = false;
 }

@@ -4,6 +4,10 @@
 @section('content')
 
     <h2 class="mb-4">Data Barang</h2>
+    <div class="container mt-3">
+        <!-- Alert placeholder -->
+        <div id="alertPlaceholder"></div>
+    </div>
     <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addBarangModal">Tambah Barang</button>
     <table id="barangTable" class="table table-striped">
         <thead>
@@ -20,10 +24,10 @@
             @foreach($barangs as $barang)
             <tr data-id="{{ $barang->kode_barang }}">
                 <td>{{ $barang->kode_barang }}</td>
-                <td contenteditable="true" class="editable" data-column="nama_barang">{{ $barang->nama_barang }}</td>
-                <td contenteditable="true" class="editable" data-column="stok_barang">{{ $barang->stok_barang }}</td>
-                <td contenteditable="true" class="editable" data-column="harga_barang">{{ $barang->harga_barang }}</td>
-                <td contenteditable="true" class="editable" data-column="keterangan">{{ $barang->keterangan }}</td>
+                <td contenteditable="true" class="editable" data-field="nama_barang" data-id="{{ $barang->nama_barang }}">{{ $barang->nama_barang }}</td>
+                <td contenteditable="true" class="editable" data-field="stok_barang" data-id="{{ $barang->stok_barang }}">{{ $barang->stok_barang }}</td>
+                <td contenteditable="true" class="editable" data-field="harga_barang" data-id="{{ $barang->harga_barang }}">{{ $barang->harga_barang }}</td>
+                <td contenteditable="true" class="editable" data-field="keterangan" data-id="{{ $barang->keterangan }}">{{ $barang->keterangan }}</td>
                 <td>
                     <button class="btn btn-danger btn-sm delete-barang">Hapus</button>
                 </td>
@@ -72,11 +76,67 @@
         </div>
     </div>
 
+    <!-- Modal Confirm -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalLabel">Konfirmasi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Apakah Anda yakin ingin melanjutkan?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" id="confirmButton" class="btn btn-primary">Ya, Lanjutkan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- jQuery harus di-load sebelum JavaScript lainnya -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+
+    function showAlert(message, type, reload = false) {
+        var alertPlaceholder = document.getElementById('alertPlaceholder');
+        var alertHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        alertPlaceholder.innerHTML = alertHTML;
+
+        // Jika reload adalah true, lakukan reload halaman setelah 2 detik
+        if (reload) {
+            setTimeout(function() {
+                location.reload();
+            }, 1000); // Waktu tunggu sebelum reload (2 detik)
+        } else {
+            // Hapus alert secara otomatis setelah 5 detik jika tidak ada reload
+            setTimeout(function() {
+                alertPlaceholder.innerHTML = '';
+            }, 5000);
+        }
+    }
+
+    function showConfirm(callback) {
+        var confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'), {
+            keyboard: false
+        });
+
+        document.getElementById('confirmButton').onclick = function() {
+            callback();
+            confirmModal.hide();
+        };
+
+        confirmModal.show();
+    }
+    
     $(document).ready(function() {
         // Simpan data baru
         $('#addBarangForm').on('submit', function(e) {
@@ -100,22 +160,25 @@
         // Edit inline
         $('.editable').on('blur', function() {
             var kode_barang = $(this).data('id');
-            var column = $(this).data('column');
+            var field_name = $(this).data('field');
             var value = $(this).text();
 
             $.ajax({
                 method: "PUT",
                 url: "/barang/" + kode_barang,
                 data: {
-                    column: column,
+                    field_name: field_name,
                     value: value,
                     "_token": $('meta[name="csrf-token"]').attr('content'),
                 },
                 success: function(response) {
-                    alert('Data berhasil diperbarui');
+                    // alert('Data berhasil diperbarui');
+                    showAlert('Data berhasil diupdate', 'success');
                 },
                 error: function(xhr) {
-                    alert('Gagal memperbarui data');
+                    // alert('Gagal memperbarui data');
+                    showAlert('Terjadi kesalahan saat mengupdate data.', 'danger');
+                    console.error(xhr.responseText); // Untuk debugging lebih lanjut
                 }
             });
         });
@@ -124,7 +187,7 @@
         $('.delete-barang').on('click', function() {
             var kode_barang = $(this).closest('tr').data('id');
 
-            if (confirm('Apakah anda yakin ingin menghapus barang ini?')) {
+            showConfirm(function() {
                 $.ajax({
                     type: "DELETE",
                     url: "/barang/" + kode_barang,
@@ -132,13 +195,16 @@
                         "_token": "{{ csrf_token() }}"
                     },
                     success: function(response) {
-                        location.reload();
+                        // location.reload();
+                        showAlert('Data berhasil dihapus', 'success',true);
                     },
                     error: function(xhr) {
-                        alert('Gagal menghapus data');
+                        // alert('Gagal menghapus data');
+                        showAlert('Terjadi kesalahan saat menghapus data.', 'danger');
+                        console.error(xhr.responseText); // Untuk debugging lebih lanjut
                     }
                 });
-            }
+            });
         });
     });
     </script>
