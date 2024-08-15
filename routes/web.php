@@ -15,5 +15,7 @@ Route::post('/barang', [BarangController::class, 'store'])->name('barang.store')
 Route::put('/barang/{kode_barang}', [BarangController::class, 'update'])->name('barang.update');
 Route::delete('/barang/{kode_barang}', [BarangController::class, 'destroy'])->name('barang.destroy');
 
+//penjualan
 Route::get('/penjualan', [PenjualanController::class, 'index'])->name('penjualan.index');
 Route::post('/penjualan', [PenjualanController::class, 'store'])->name('penjualan.store');
+Route::get('/penjualan/cetak-resi/{id}', [PenjualanController::class, 'cetakResi'])->name('penjualan.cetakResi');

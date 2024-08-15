@@ -18,27 +18,32 @@ class PenjualanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'kode_barang' => 'required|exists:barangs,kode_barang',
-            'jumlah' => 'required|integer|min:1',
+            'kode_barang.*' => 'required|exists:barangs,kode_barang',
+            'jumlah.*' => 'required|integer|min:1',
         ]);
 
-        $barang = Barang::where('kode_barang', $request->kode_barang)->first();
+        $items = $request->input('kode_barang');
+        $jumlahs = $request->input('jumlah');
 
-        if ($barang->stok_barang < $request->jumlah) {
-            return back()->withErrors('Stok tidak mencukupi!');
+        foreach ($items as $index => $kodeBarang) {
+            $barang = Barang::where('kode_barang', $kodeBarang)->first();
+
+            if ($barang->stok_barang < $jumlahs[$index]) {
+                return back()->withErrors("Stok tidak mencukupi untuk barang {$barang->nama_barang}!");
+            }
+
+            $totalHarga = $barang->harga_barang * $jumlahs[$index];
+
+            Penjualan::create([
+                'kode_barang' => $kodeBarang,
+                'jumlah' => $jumlahs[$index],
+                'total_harga' => $totalHarga,
+            ]);
+
+            // Kurangi stok barang
+            $barang->kurangiStok($jumlahs[$index]);
         }
 
-        $totalHarga = $barang->harga_barang * $request->jumlah;
-
-        Penjualan::create([
-            'kode_barang' => $request->kode_barang,
-            'jumlah' => $request->jumlah,
-            'total_harga' => $totalHarga,
-        ]);
-
-        // Kurangi stok barang
-        $barang->kurangiStok($request->jumlah);
-
-        return redirect()->back()->with('success', 'Penjualan berhasil!');
+        return redirect()->back()->with('success', 'Penjualan berhasil diproses!');
     }
 }
