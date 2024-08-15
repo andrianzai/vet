@@ -159,7 +159,8 @@
 
         // Edit inline
         $('.editable').on('blur', function() {
-            var kode_barang = $(this).data('id');
+            var kode_barang = $(this).closest('tr').data('id');
+            console.log('Kode Barang:', kode_barang); // Debugging: Pastikan kode_barang benar
             var field_name = $(this).data('field');
             var value = $(this).text();
 
