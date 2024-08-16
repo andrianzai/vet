@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('kode_barang');
             $table->integer('jumlah');
+            $table->decimal('harga', 15, 2);
             $table->decimal('total_harga', 15, 2);
             $table->timestamps();
 

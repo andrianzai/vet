@@ -12,6 +12,7 @@ class Penjualan extends Model
     protected $fillable = [
         'kode_barang',
         'jumlah',
+        'harga',
         'total_harga',
     ];
 

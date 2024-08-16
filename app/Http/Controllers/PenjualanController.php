@@ -4,8 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use App\Models\Barang;
 use App\Models\Penjualan;
+
+Route::post('/penjualan/checkout', [PenjualanController::class, 'checkout']);
 
 class PenjualanController extends Controller
 {
@@ -45,5 +50,44 @@ class PenjualanController extends Controller
         }
 
         return redirect()->back()->with('success', 'Penjualan berhasil diproses!');
+    }
+
+    public function checkout(Request $request)
+    {
+        $items = $request->input('items');
+
+        try {
+            DB::beginTransaction();
+
+            foreach ($items as $item) {
+                $barang = Barang::where('kode_barang', $item['kode_barang'])->first();
+
+                if ($barang) {
+                    // Kurangi stok barang
+                    $barang->stok_barang -= $item['jumlah'];
+                    $barang->save();
+
+                    // Hitung total harga
+                    $total_harga = $item['jumlah'] * $barang->harga_barang;
+
+                    // Simpan detail penjualan
+                    Penjualan::create([
+                        'kode_barang' => $item['kode_barang'],
+                        'jumlah' => $item['jumlah'],
+                        'harga_barang' => $barang->harga_barang,
+                        'total_harga' => $total_harga,  // Pastikan total_harga diisi dengan benar
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json(['success' => 'Pembayaran berhasil. Resi sedang dicetak.']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error saat checkout: ' . $e->getMessage());
+            return response()->json(['error' => 'Terjadi kesalahan saat memproses pembayaran.'], 500);
+        }
     }
 }
